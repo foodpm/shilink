@@ -283,6 +283,93 @@ function showAddLinkModal() {
     document.getElementById('add-link-modal').classList.add('active');
 }
 
+function showAddLinkToProjectModal() {
+    document.getElementById('add-link-to-project-modal').classList.add('active');
+}
+
+// 复制项目链接功能
+function copyProjectLinks() {
+    if (!data.currentProject) return;
+    
+    const projectLinks = data.links.filter(link => link.projectId === data.currentProject);
+    
+    if (projectLinks.length === 0) {
+        alert('当前项目暂无链接');
+        return;
+    }
+    
+    // 按sortOrder排序
+    const sortedProjectLinks = projectLinks.sort((a, b) => {
+        const orderA = a.sortOrder || 0;
+        const orderB = b.sortOrder || 0;
+        return orderA - orderB;
+    });
+    
+    // 格式化链接文本
+    const linkText = sortedProjectLinks.map(link => {
+        return `${link.name}\n${link.url}`;
+    }).join('\n\n');
+    
+    // 复制到剪贴板
+    navigator.clipboard.writeText(linkText).then(() => {
+        // 显示复制成功提示
+        showCopySuccessMessage();
+    }).catch(err => {
+        console.error('复制失败:', err);
+        // 降级方案：使用传统方法
+        fallbackCopyTextToClipboard(linkText);
+    });
+}
+
+// 显示复制成功提示
+function showCopySuccessMessage() {
+    // 创建提示元素
+    const message = document.createElement('div');
+    message.className = 'copy-success-message';
+    message.innerHTML = '<i class="fas fa-check"></i> 链接已复制到剪贴板';
+    
+    document.body.appendChild(message);
+    
+    // 显示动画
+    setTimeout(() => {
+        message.classList.add('show');
+    }, 10);
+    
+    // 3秒后移除
+    setTimeout(() => {
+        message.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(message);
+        }, 300);
+    }, 3000);
+}
+
+// 降级复制方案
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showCopySuccessMessage();
+        } else {
+            alert('复制失败，请手动复制');
+        }
+    } catch (err) {
+        console.error('降级复制也失败:', err);
+        alert('复制失败，请手动复制');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
 function updateProjectSelect() {
     const select = document.getElementById('link-project');
     select.innerHTML = '<option value="">请选择项目</option>';
@@ -402,6 +489,57 @@ function addLink(event) {
     
     // 清空表单
     document.getElementById('add-link-form').reset();
+}
+
+// 项目详情页添加链接
+function addLinkToProject(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('project-link-name').value.trim();
+    const url = document.getElementById('project-link-url').value.trim();
+    const description = document.getElementById('project-link-desc').value.trim();
+    const projectId = data.currentProject; // 使用当前项目ID
+    
+    if (!name || !url || !projectId) return;
+    
+    // 获取当前项目中的所有链接，并确保它们都有sortOrder
+    const projectLinks = data.links.filter(link => link.projectId === projectId);
+    
+    // 为没有sortOrder的现有链接分配sortOrder
+    projectLinks.forEach((link, index) => {
+        if (link.sortOrder === undefined || link.sortOrder === null) {
+            const linkIndex = data.links.findIndex(l => l.id === link.id);
+            if (linkIndex !== -1) {
+                data.links[linkIndex].sortOrder = index;
+            }
+        }
+    });
+    
+    // 计算新链接的sortOrder，使其排在最前面
+    const minSortOrder = projectLinks.length > 0 ? 
+        Math.min(...projectLinks.map(link => link.sortOrder || 0)) : 0;
+    
+    const link = {
+        id: generateId(),
+        name,
+        url,
+        description,
+        projectId,
+        isPinned: false,
+        sortOrder: minSortOrder - 1, // 新链接排在最前面
+        pinnedAt: null, // 置顶时间
+        createdAt: new Date().toISOString()
+    };
+    
+    data.links.push(link);
+    saveData();
+    closeModal('add-link-to-project-modal');
+    
+    // 重新渲染项目详情页
+    renderProjectDetail(data.currentProject);
+    
+    // 清空表单
+    document.getElementById('add-link-to-project-form').reset();
 }
 
 function editLink(linkId) {

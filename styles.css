@@ -414,6 +414,125 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
+/* 项目链接区域样式 */
+.project-links {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.project-links-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 12px;
+}
+
+.links-title {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.links-title i {
+    color: #007bff;
+    font-size: 1.1rem;
+}
+
+.links-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.add-link-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.add-link-btn:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.add-link-btn:active {
+    transform: translateY(0);
+}
+
+.copy-links-btn {
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+}
+
+.copy-links-btn:hover {
+    background: #38a169;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+}
+
+.copy-links-btn:active {
+    transform: translateY(0);
+}
+
+/* 复制成功提示样式 */
+.copy-success-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #48bb78;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(72, 187, 120, 0.4);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.copy-success-message.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.copy-success-message i {
+    font-size: 1.1rem;
+}
+
 .header-top {
     display: flex;
     align-items: center;
@@ -856,6 +975,35 @@ body {
     
     .modal-header {
         padding: 20px;
+    }
+    
+    .project-links-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .links-title {
+        text-align: center;
+        justify-content: center;
+    }
+    
+    .links-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .copy-links-btn,
+    .add-link-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .copy-success-message {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        right: 10px;
     }
 }
 
