@@ -131,18 +131,54 @@ body {
     font-size: 1.2rem;
     font-weight: 600;
     color: #2d3748;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.link-icon {
+    color: #667eea;
+    font-size: 1rem;
+    flex-shrink: 0;
 }
 
 .link-description {
     color: #718096;
-    margin-bottom: 8px;
+    margin-bottom: 0;
     font-size: 0.95rem;
+}
+
+.link-project {
+    display: flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    width: fit-content;
+    margin-bottom: 8px;
+}
+
+.link-project:hover {
+    background: rgba(102, 126, 234, 0.15);
+}
+
+.link-project i {
+    margin-right: 4px;
+}
+
+.link-project span {
+    color: #667eea;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
 .link-date {
     color: #a0aec0;
     font-size: 0.85rem;
+    flex-shrink: 0;
 }
 
 .link-actions {

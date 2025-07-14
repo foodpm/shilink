@@ -114,29 +114,41 @@ function renderPinnedLinks() {
         return;
     }
     
-    container.innerHTML = pinnedLinks.map((link, index) => `
-        <div class="link-item draggable" data-link-id="${link.id}" data-index="${index}" draggable="true" onclick="openLink('${link.url}')">
-            <div class="drag-handle">
-                <i class="fas fa-grip-vertical"></i>
+    container.innerHTML = pinnedLinks.map((link, index) => {
+        // 获取链接所属的项目名称
+        const project = data.projects.find(p => p.id === link.projectId);
+        const projectName = project ? project.name : '未分类';
+        
+        return `
+            <div class="link-item draggable" data-link-id="${link.id}" data-index="${index}" draggable="true" onclick="openLink('${link.url}')">
+                <div class="drag-handle">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <div class="link-info">
+                    <div class="link-name">
+                        <i class="fas fa-link link-icon"></i>
+                        ${link.name}
+                    </div>
+                    <div class="link-project">
+                        <i class="fas fa-folder"></i>
+                        <span>${projectName}</span>
+                    </div>
+                    <div class="link-description">${link.description || ''}</div>
+                </div>
+                <div class="link-actions">
+                    <button class="action-btn" onclick="event.stopPropagation(); unpinLink('${link.id}')" title="取消置顶">
+                        <i class="fas fa-thumbtack unpin-icon"></i>
+                    </button>
+                    <button class="action-btn" onclick="event.stopPropagation(); editLink('${link.id}')" title="编辑">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn danger" onclick="event.stopPropagation(); deleteLink('${link.id}')" title="删除">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
-            <div class="link-info">
-                <div class="link-name">${link.name}</div>
-                <div class="link-description">${link.description || ''}</div>
-                <div class="link-date">${formatDate(link.createdAt)}</div>
-            </div>
-            <div class="link-actions">
-                <button class="action-btn" onclick="event.stopPropagation(); unpinLink('${link.id}')" title="取消置顶">
-                    <i class="fas fa-thumbtack unpin-icon"></i>
-                </button>
-                <button class="action-btn" onclick="event.stopPropagation(); editLink('${link.id}')" title="编辑">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn danger" onclick="event.stopPropagation(); deleteLink('${link.id}')" title="删除">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
     
     // 初始化拖拽功能
     initializeDragAndDrop('pinned-links', 'pinned');
@@ -225,7 +237,10 @@ function renderProjectDetail(projectId) {
                 <i class="fas fa-grip-vertical"></i>
             </div>
             <div class="link-info">
-                <div class="link-name">${link.name}${link.isPinned ? ' <i class="fas fa-thumbtack" style="color: #667eea; font-size: 0.8em;"></i>' : ''}</div>
+                <div class="link-name">
+                    <i class="fas fa-link link-icon"></i>
+                    ${link.name}${link.isPinned ? ' <i class="fas fa-thumbtack" style="color: #667eea; font-size: 0.8em;"></i>' : ''}
+                </div>
                 <div class="link-description">${link.description || ''}</div>
                 <div class="link-date">${formatDate(link.createdAt)}</div>
             </div>
