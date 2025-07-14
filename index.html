@@ -68,12 +68,13 @@
     <!-- 项目详情页 -->
     <div id="project-detail-page" class="page">
         <header class="detail-header">
-            <button class="back-btn" onclick="showMainPage()">
-                <i class="fas fa-arrow-left"></i>
-                返回
-            </button>
-            <div class="project-info">
+            <div class="header-top">
+                <button class="back-btn" onclick="showMainPage()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
                 <h1 id="project-title" class="editable" onclick="editProjectTitle()">项目名称</h1>
+            </div>
+            <div class="project-info">
                 <p id="project-description" class="editable" onclick="editProjectDescription()">项目简介</p>
                 <div class="project-meta">
                     <span id="project-link-count">0 个链接</span>
@@ -92,11 +93,12 @@
     <!-- 设置页面 -->
     <div id="settings-page" class="page">
         <header class="detail-header">
-            <button class="back-btn" onclick="showMainPage()">
-                <i class="fas fa-arrow-left"></i>
-                返回
-            </button>
-            <h1>设置</h1>
+            <div class="header-top">
+                <button class="back-btn" onclick="showMainPage()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h1>设置</h1>
+            </div>
         </header>
         
         <section class="settings-content">
@@ -117,13 +119,30 @@
                 </div>
             </div>
             
-            <div class="setting-group">
-                <h3>更多产品经理工具</h3>
-                <div class="setting-item">
-                    <a href="https://chromewebstore.google.com/detail/%E5%BE%88%E9%9A%BE%E8%AF%84%EF%BC%9A%E4%BA%A7%E5%93%81%E7%BB%8F%E7%90%86%E9%9C%80%E6%B1%82%E8%AF%84%E5%AE%A1%E5%8A%A9%E6%89%8B/jnfblbmbbgfeddfhlnhafekhbfamoblh" target="_blank" class="product-link">
-                        <i class="fas fa-external-link-alt"></i>
-                        很难评-产品经理需求评审助手
-                    </a>
+            <!-- 更多工具区域 -->
+            <div class="tools-section">
+                <div class="tools-header">
+                    <h4>相关工具推荐</h4>
+                    <span class="tools-subtitle">提升产品经理工作效率</span>
+                </div>
+                
+                <div class="tools-grid">
+                    <!-- 浏览器扩展板块 -->
+                    <div class="tool-category">
+                        <div class="category-header">
+                            <i class="fas fa-puzzle-piece"></i>
+                            <span>浏览器扩展</span>
+                        </div>
+                        <div class="tool-items">
+                            <a href="https://chromewebstore.google.com/detail/%E5%BE%88%E9%9A%BE%E8%AF%84%EF%BC%9A%E4%BA%A7%E5%93%81%E7%BB%8F%E7%90%86%E9%9C%80%E6%B1%82%E8%AF%84%E5%AE%A1%E5%8A%A9%E6%89%8B/jnfblbmbbgfeddfhlnhafekhbfamoblh" target="_blank" class="tool-link">
+                                <div class="tool-info">
+                                    <span class="tool-name">很难评</span>
+                                    <span class="tool-desc">需求评审助手</span>
+                                </div>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
