@@ -146,7 +146,9 @@ body {
 }
 
 .link-actions {
-    position: relative;
+    display: flex;
+    gap: 4px;
+    align-items: center;
 }
 
 .action-btn {
@@ -157,6 +159,12 @@ body {
     padding: 8px;
     border-radius: 8px;
     transition: all 0.3s ease;
+    font-size: 0.9rem;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .action-btn:hover {
@@ -164,34 +172,57 @@ body {
     color: #2d3748;
 }
 
-.action-menu {
+.action-btn.danger {
+    color: #e53e3e;
+}
+
+.action-btn.danger:hover {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+/* 置顶图钉图标样式 */
+.pin-icon {
+    color: #718096;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover .pin-icon {
+    color: #667eea;
+    transform: scale(1.1);
+}
+
+/* 取消置顶图钉图标样式 - 红色带斜杠效果 */
+.unpin-icon {
+    color: #e53e3e;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.unpin-icon::after {
+    content: '';
     position: absolute;
-    top: 100%;
-    right: 0;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    padding: 8px 0;
-    min-width: 120px;
-    z-index: 2500;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 2px;
+    background: #e53e3e;
+    transform: translate(-50%, -50%) rotate(45deg);
+    transition: all 0.3s ease;
 }
 
-.action-menu button {
-    width: 100%;
-    background: none;
-    border: none;
-    padding: 12px 16px;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    font-size: 0.9rem;
+.action-btn:hover .unpin-icon {
+    color: #c53030;
+    transform: scale(1.1);
 }
 
-.action-menu button:hover {
-    background: #f7fafc;
+.action-btn:hover .unpin-icon::after {
+    background: #c53030;
+    height: 2.5px;
 }
 
-.action-menu button.danger {
+/* 已置顶链接区域的图钉样式 */
+.pinned-links .action-btn .fa-thumbtack {
     color: #e53e3e;
 }
 
@@ -671,4 +702,76 @@ body {
 .empty-state p {
     font-size: 1rem;
     opacity: 0.8;
+}
+
+/* 拖拽功能样式 */
+.draggable {
+    cursor: move;
+    position: relative;
+}
+
+.draggable:hover .drag-handle {
+    opacity: 1;
+}
+
+.drag-handle {
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: grab;
+    padding: 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 10;
+}
+
+.drag-handle:hover {
+    color: #667eea;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.draggable.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+}
+
+.draggable.drag-over {
+    border-top: 2px solid #667eea;
+    transform: translateY(2px);
+}
+
+/* 拖拽时的视觉反馈 */
+.link-item.draggable {
+    transition: all 0.3s ease, border-top 0.1s ease;
+}
+
+.link-item.draggable:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.link-item.draggable.dragging:hover {
+    transform: rotate(2deg);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* 移动端拖拽优化 */
+@media (max-width: 768px) {
+    .drag-handle {
+        left: 5px;
+        opacity: 0.6;
+    }
+    
+    .draggable {
+        touch-action: none;
+    }
 }

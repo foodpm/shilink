@@ -15,9 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!e.target.closest('.add-button-container')) {
             hideAddMenu();
         }
-        if (!e.target.closest('.action-btn') && !e.target.closest('.action-menu')) {
-            hideAllActionMenus();
-        }
     });
 });
 
@@ -30,6 +27,25 @@ function loadData() {
     const saved = localStorage.getItem('shilian-data');
     if (saved) {
         data = JSON.parse(saved);
+        
+        // 数据迁移：为现有链接添加sortOrder
+        let needsSave = false;
+        data.projects.forEach(project => {
+            const projectLinks = data.links.filter(link => link.projectId === project.id);
+            projectLinks.forEach((link, index) => {
+                if (link.sortOrder === undefined || link.sortOrder === null) {
+                    const linkIndex = data.links.findIndex(l => l.id === link.id);
+                    if (linkIndex !== -1) {
+                        data.links[linkIndex].sortOrder = index;
+                        needsSave = true;
+                    }
+                }
+            });
+        });
+        
+        if (needsSave) {
+            saveData();
+        }
     }
 }
 
@@ -78,7 +94,14 @@ function renderMainPage() {
 
 function renderPinnedLinks() {
     const container = document.getElementById('pinned-links');
-    const pinnedLinks = data.links.filter(link => link.isPinned);
+    const pinnedLinks = data.links
+        .filter(link => link.isPinned)
+        .sort((a, b) => {
+            // 按置顶时间排序，新置顶的排在前面
+            const timeA = new Date(a.pinnedAt || a.createdAt).getTime();
+            const timeB = new Date(b.pinnedAt || b.createdAt).getTime();
+            return timeB - timeA;
+        });
     
     if (pinnedLinks.length === 0) {
         container.innerHTML = `
@@ -91,34 +114,32 @@ function renderPinnedLinks() {
         return;
     }
     
-    container.innerHTML = pinnedLinks.map(link => `
-        <div class="link-item" onclick="openLink('${link.url}')">
+    container.innerHTML = pinnedLinks.map((link, index) => `
+        <div class="link-item draggable" data-link-id="${link.id}" data-index="${index}" draggable="true" onclick="openLink('${link.url}')">
+            <div class="drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+            </div>
             <div class="link-info">
                 <div class="link-name">${link.name}</div>
                 <div class="link-description">${link.description || ''}</div>
                 <div class="link-date">${formatDate(link.createdAt)}</div>
             </div>
             <div class="link-actions">
-                <button class="action-btn" onclick="event.stopPropagation(); toggleActionMenu('pinned-link-${link.id}')">
-                    <i class="fas fa-ellipsis-h"></i>
+                <button class="action-btn" onclick="event.stopPropagation(); unpinLink('${link.id}')" title="取消置顶">
+                    <i class="fas fa-thumbtack unpin-icon"></i>
                 </button>
-                <div id="pinned-link-${link.id}" class="action-menu hidden">
-                    <button onclick="event.stopPropagation(); unpinLink('${link.id}')">
-                        <i class="fas fa-thumbtack"></i>
-                        取消置顶
-                    </button>
-                    <button onclick="event.stopPropagation(); editLink('${link.id}')">
-                        <i class="fas fa-edit"></i>
-                        编辑
-                    </button>
-                    <button onclick="event.stopPropagation(); deleteLink('${link.id}')" class="danger">
-                        <i class="fas fa-trash"></i>
-                        删除
-                    </button>
-                </div>
+                <button class="action-btn" onclick="event.stopPropagation(); editLink('${link.id}')" title="编辑">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn danger" onclick="event.stopPropagation(); deleteLink('${link.id}')" title="删除">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     `).join('');
+    
+    // 初始化拖拽功能
+    initializeDragAndDrop('pinned-links', 'pinned');
 }
 
 function renderProjects() {
@@ -163,14 +184,31 @@ function renderProjectDetail(projectId) {
     
     const projectLinks = data.links.filter(link => link.projectId === projectId);
     
+    // 为没有sortOrder的现有链接分配sortOrder
+    projectLinks.forEach((link, index) => {
+        if (link.sortOrder === undefined || link.sortOrder === null) {
+            const linkIndex = data.links.findIndex(l => l.id === link.id);
+            if (linkIndex !== -1) {
+                data.links[linkIndex].sortOrder = index;
+            }
+        }
+    });
+    
+    // 按sortOrder排序，新添加的排在前面
+    const sortedProjectLinks = projectLinks.sort((a, b) => {
+        const orderA = a.sortOrder || 0;
+        const orderB = b.sortOrder || 0;
+        return orderA - orderB;
+    });
+    
     document.getElementById('project-title').textContent = project.name;
     document.getElementById('project-description').textContent = project.description || '暂无描述';
-    document.getElementById('project-link-count').textContent = `${projectLinks.length} 个链接`;
+    document.getElementById('project-link-count').textContent = `${sortedProjectLinks.length} 个链接`;
     document.getElementById('project-date').textContent = formatDate(project.createdAt);
     
     const container = document.getElementById('project-links-list');
     
-    if (projectLinks.length === 0) {
+    if (sortedProjectLinks.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-link"></i>
@@ -181,34 +219,32 @@ function renderProjectDetail(projectId) {
         return;
     }
     
-    container.innerHTML = projectLinks.map(link => `
-        <div class="link-item" onclick="openLink('${link.url}')">
+    container.innerHTML = sortedProjectLinks.map((link, index) => `
+        <div class="link-item draggable" data-link-id="${link.id}" data-index="${index}" draggable="true" onclick="openLink('${link.url}')">
+            <div class="drag-handle">
+                <i class="fas fa-grip-vertical"></i>
+            </div>
             <div class="link-info">
                 <div class="link-name">${link.name}${link.isPinned ? ' <i class="fas fa-thumbtack" style="color: #667eea; font-size: 0.8em;"></i>' : ''}</div>
                 <div class="link-description">${link.description || ''}</div>
                 <div class="link-date">${formatDate(link.createdAt)}</div>
             </div>
             <div class="link-actions">
-                <button class="action-btn" onclick="event.stopPropagation(); toggleActionMenu('link-${link.id}')">
-                    <i class="fas fa-ellipsis-h"></i>
+                <button class="action-btn" onclick="event.stopPropagation(); ${link.isPinned ? 'unpinLink' : 'pinLink'}('${link.id}')" title="${link.isPinned ? '取消置顶' : '置顶'}">
+                    <i class="fas fa-thumbtack ${link.isPinned ? 'unpin-icon' : 'pin-icon'}"></i>
                 </button>
-                <div id="link-${link.id}" class="action-menu hidden">
-                    <button onclick="event.stopPropagation(); ${link.isPinned ? 'unpinLink' : 'pinLink'}('${link.id}')">
-                        <i class="fas fa-thumbtack"></i>
-                        ${link.isPinned ? '取消置顶' : '置顶'}
-                    </button>
-                    <button onclick="event.stopPropagation(); editLink('${link.id}')">
-                        <i class="fas fa-edit"></i>
-                        编辑
-                    </button>
-                    <button onclick="event.stopPropagation(); deleteLink('${link.id}')" class="danger">
-                        <i class="fas fa-trash"></i>
-                        删除
-                    </button>
-                </div>
+                <button class="action-btn" onclick="event.stopPropagation(); editLink('${link.id}')" title="编辑">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn danger" onclick="event.stopPropagation(); deleteLink('${link.id}')" title="删除">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     `).join('');
+    
+    // 初始化拖拽功能
+    initializeDragAndDrop('project-links-list', 'project', projectId);
 }
 
 // 添加功能
@@ -310,6 +346,23 @@ function addLink(event) {
     
     if (!name || !url || !projectId) return;
     
+    // 获取当前项目中的所有链接，并确保它们都有sortOrder
+    const projectLinks = data.links.filter(link => link.projectId === projectId);
+    
+    // 为没有sortOrder的现有链接分配sortOrder
+    projectLinks.forEach((link, index) => {
+        if (link.sortOrder === undefined || link.sortOrder === null) {
+            const linkIndex = data.links.findIndex(l => l.id === link.id);
+            if (linkIndex !== -1) {
+                data.links[linkIndex].sortOrder = index;
+            }
+        }
+    });
+    
+    // 计算新链接的sortOrder，使其排在最前面
+    const minSortOrder = projectLinks.length > 0 ? 
+        Math.min(...projectLinks.map(link => link.sortOrder || 0)) : 0;
+    
     const link = {
         id: generateId(),
         name,
@@ -317,6 +370,8 @@ function addLink(event) {
         description,
         projectId,
         isPinned: false,
+        sortOrder: minSortOrder - 1, // 新链接排在最前面
+        pinnedAt: null, // 置顶时间
         createdAt: new Date().toISOString()
     };
     
@@ -347,7 +402,6 @@ function editLink(linkId) {
     updateEditProjectSelect();
     document.getElementById('edit-link-project').value = link.projectId || '';
     
-    hideAllActionMenus();
     document.getElementById('edit-link-modal').classList.add('active');
 }
 
@@ -387,8 +441,8 @@ function pinLink(linkId) {
     const linkIndex = data.links.findIndex(l => l.id === linkId);
     if (linkIndex !== -1) {
         data.links[linkIndex].isPinned = true;
+        data.links[linkIndex].pinnedAt = new Date().toISOString(); // 记录置顶时间
         saveData();
-        hideAllActionMenus();
         
         if (data.currentProject) {
             renderProjectDetail(data.currentProject);
@@ -401,8 +455,8 @@ function unpinLink(linkId) {
     const linkIndex = data.links.findIndex(l => l.id === linkId);
     if (linkIndex !== -1) {
         data.links[linkIndex].isPinned = false;
+        data.links[linkIndex].pinnedAt = null; // 清除置顶时间
         saveData();
-        hideAllActionMenus();
         
         if (data.currentProject) {
             renderProjectDetail(data.currentProject);
@@ -419,7 +473,6 @@ function deleteLink(linkId) {
             data.links = data.links.filter(l => l.id !== linkId);
             saveData();
             closeModal('confirm-modal');
-            hideAllActionMenus();
             
             if (data.currentProject) {
                 renderProjectDetail(data.currentProject);
@@ -515,20 +568,6 @@ function editProjectDescription() {
 }
 
 // UI 交互
-function toggleActionMenu(menuId) {
-    hideAllActionMenus();
-    const menu = document.getElementById(menuId);
-    if (menu) {
-        menu.classList.remove('hidden');
-    }
-}
-
-function hideAllActionMenus() {
-    document.querySelectorAll('.action-menu').forEach(menu => {
-        menu.classList.add('hidden');
-    });
-}
-
 function showConfirmModal(message, onConfirm) {
     document.getElementById('confirm-message').textContent = message;
     document.getElementById('confirm-delete-btn').onclick = onConfirm;
@@ -588,4 +627,116 @@ function importData(event) {
     
     reader.readAsText(file);
     event.target.value = ''; // 清空文件选择
+}
+
+// 拖拽排序功能
+function initializeDragAndDrop(containerId, type, projectId = null) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    let draggedElement = null;
+    let draggedIndex = null;
+    
+    // 为所有可拖拽元素添加事件监听器
+    const draggableItems = container.querySelectorAll('.draggable');
+    
+    draggableItems.forEach((item, index) => {
+        item.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            draggedIndex = parseInt(this.dataset.index);
+            this.style.opacity = '0.5';
+            
+            // 设置拖拽数据
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        });
+        
+        item.addEventListener('dragend', function(e) {
+            this.style.opacity = '';
+            draggedElement = null;
+            draggedIndex = null;
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            // 添加视觉反馈
+            this.style.borderTop = '2px solid #667eea';
+        });
+        
+        item.addEventListener('dragleave', function(e) {
+            this.style.borderTop = '';
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderTop = '';
+            
+            if (draggedElement && draggedElement !== this) {
+                const targetIndex = parseInt(this.dataset.index);
+                
+                // 执行排序更新
+                updateSortOrder(type, draggedIndex, targetIndex, projectId);
+            }
+        });
+    });
+}
+
+function updateSortOrder(type, fromIndex, toIndex, projectId = null) {
+    if (type === 'pinned') {
+        // 处理置顶链接排序
+        const pinnedLinks = data.links
+            .filter(link => link.isPinned)
+            .sort((a, b) => {
+                const timeA = new Date(a.pinnedAt || a.createdAt);
+                const timeB = new Date(b.pinnedAt || b.createdAt);
+                return timeB - timeA;
+            });
+        
+        if (fromIndex >= 0 && toIndex >= 0 && fromIndex < pinnedLinks.length && toIndex < pinnedLinks.length) {
+            // 重新排列数组
+            const [movedLink] = pinnedLinks.splice(fromIndex, 1);
+            pinnedLinks.splice(toIndex, 0, movedLink);
+            
+            // 更新pinnedAt时间以反映新的排序
+            const baseTime = new Date();
+            pinnedLinks.forEach((link, index) => {
+                const linkIndex = data.links.findIndex(l => l.id === link.id);
+                if (linkIndex !== -1) {
+                    // 从最新时间开始，每个链接间隔1秒
+                    data.links[linkIndex].pinnedAt = new Date(baseTime.getTime() - index * 1000).toISOString();
+                }
+            });
+            
+            saveData();
+            renderMainPage();
+        }
+    } else if (type === 'project' && projectId) {
+        // 处理项目内链接排序
+        const projectLinks = data.links
+            .filter(link => link.projectId === projectId)
+            .sort((a, b) => {
+                const orderA = a.sortOrder || 0;
+                const orderB = b.sortOrder || 0;
+                return orderA - orderB;
+            });
+        
+        if (fromIndex >= 0 && toIndex >= 0 && fromIndex < projectLinks.length && toIndex < projectLinks.length) {
+            // 重新排列数组
+            const [movedLink] = projectLinks.splice(fromIndex, 1);
+            projectLinks.splice(toIndex, 0, movedLink);
+            
+            // 重新分配sortOrder
+            projectLinks.forEach((link, index) => {
+                const linkIndex = data.links.findIndex(l => l.id === link.id);
+                if (linkIndex !== -1) {
+                    data.links[linkIndex].sortOrder = index;
+                }
+            });
+            
+            saveData();
+            renderProjectDetail(projectId);
+        }
+    }
 }
