@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拾链 - 原型链接管理工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 主页面 -->
+    <div id="main-page" class="page active">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="logo-section">
+                <img src="未命名项目-图层 1.jpeg" alt="拾链Logo" class="logo">
+                <div class="title-section">
+                    <h1 class="app-title">拾链</h1>
+                    <p class="subtitle">原型链接管理工具</p>
+                </div>
+            </div>
+            <button class="settings-btn" onclick="showSettings()">
+                <i class="fas fa-cog"></i>
+            </button>
+        </header>
+
+        <!-- 置顶链接部分 -->
+        <section class="pinned-section">
+            <h2 class="section-title">
+                <i class="fas fa-thumbtack"></i>
+                置顶链接
+            </h2>
+            <div id="pinned-links" class="pinned-links">
+                <!-- 置顶链接将通过JavaScript动态生成 -->
+            </div>
+        </section>
+
+        <!-- 项目部分 -->
+        <section class="projects-section">
+            <h2 class="section-title">
+                <i class="fas fa-folder"></i>
+                项目
+            </h2>
+            <div id="projects-grid" class="projects-grid">
+                <!-- 项目将通过JavaScript动态生成 -->
+            </div>
+        </section>
+
+        <!-- 添加按钮 -->
+        <div class="add-button-container">
+            <button class="add-btn" onclick="showAddMenu()">
+                <i class="fas fa-plus"></i>
+                添加
+            </button>
+            <div id="add-menu" class="add-menu hidden">
+                <button onclick="showAddProjectModal()">
+                    <i class="fas fa-folder-plus"></i>
+                    添加项目
+                </button>
+                <button onclick="showAddLinkModal()">
+                    <i class="fas fa-link"></i>
+                    添加链接
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 项目详情页 -->
+    <div id="project-detail-page" class="page">
+        <header class="detail-header">
+            <button class="back-btn" onclick="showMainPage()">
+                <i class="fas fa-arrow-left"></i>
+                返回
+            </button>
+            <div class="project-info">
+                <h1 id="project-title" class="editable" onclick="editProjectTitle()">项目名称</h1>
+                <p id="project-description" class="editable" onclick="editProjectDescription()">项目简介</p>
+                <div class="project-meta">
+                    <span id="project-link-count">0 个链接</span>
+                    <span id="project-date">创建日期</span>
+                </div>
+            </div>
+        </header>
+        
+        <section class="project-links">
+            <div id="project-links-list" class="links-list">
+                <!-- 项目链接将通过JavaScript动态生成 -->
+            </div>
+        </section>
+    </div>
+
+    <!-- 设置页面 -->
+    <div id="settings-page" class="page">
+        <header class="detail-header">
+            <button class="back-btn" onclick="showMainPage()">
+                <i class="fas fa-arrow-left"></i>
+                返回
+            </button>
+            <h1>设置</h1>
+        </header>
+        
+        <section class="settings-content">
+            <div class="setting-group">
+                <h3>数据管理</h3>
+                <div class="setting-item">
+                    <button class="setting-btn" onclick="exportData()">
+                        <i class="fas fa-download"></i>
+                        导出数据
+                    </button>
+                </div>
+                <div class="setting-item">
+                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+                    <button class="setting-btn" onclick="document.getElementById('import-file').click()">
+                        <i class="fas fa-upload"></i>
+                        导入数据
+                    </button>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h3>更多产品经理工具</h3>
+                <div class="setting-item">
+                    <a href="https://chromewebstore.google.com/detail/%E5%BE%88%E9%9A%BE%E8%AF%84%EF%BC%9A%E4%BA%A7%E5%93%81%E7%BB%8F%E7%90%86%E9%9C%80%E6%B1%82%E8%AF%84%E5%AE%A1%E5%8A%A9%E6%89%8B/jnfblbmbbgfeddfhlnhafekhbfamoblh" target="_blank" class="product-link">
+                        <i class="fas fa-external-link-alt"></i>
+                        很难评-产品经理需求评审助手
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 添加项目弹窗 -->
+    <div id="add-project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加项目</h3>
+                <button class="close-btn" onclick="closeModal('add-project-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-project-form" onsubmit="addProject(event)">
+                <div class="form-group">
+                    <label for="project-name">项目名称 *</label>
+                    <input type="text" id="project-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-desc">项目简介</label>
+                    <textarea id="project-desc" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('add-project-modal')">取消</button>
+                    <button type="submit">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加链接弹窗 -->
+    <div id="add-link-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加链接</h3>
+                <button class="close-btn" onclick="closeModal('add-link-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-link-form" onsubmit="addLink(event)">
+                <div class="form-group">
+                    <label for="link-name">链接名称 *</label>
+                    <input type="text" id="link-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="link-url">链接地址 *</label>
+                    <input type="url" id="link-url" required>
+                </div>
+                <div class="form-group">
+                    <label for="link-desc">链接简介</label>
+                    <textarea id="link-desc" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="link-project">所属项目 *</label>
+                    <select id="link-project" required>
+                        <option value="">请选择项目</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('add-link-modal')">取消</button>
+                    <button type="submit">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑链接弹窗 -->
+    <div id="edit-link-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑链接</h3>
+                <button class="close-btn" onclick="closeModal('edit-link-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="edit-link-form" onsubmit="updateLink(event)">
+                <input type="hidden" id="edit-link-id">
+                <div class="form-group">
+                    <label for="edit-link-name">链接名称 *</label>
+                    <input type="text" id="edit-link-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-link-url">链接地址 *</label>
+                    <input type="url" id="edit-link-url" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-link-desc">链接简介</label>
+                    <textarea id="edit-link-desc" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-link-project">所属项目 *</label>
+                    <select id="edit-link-project" required>
+                        <option value="">请选择项目</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" onclick="closeModal('edit-link-modal')">取消</button>
+                    <button type="submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 确认删除弹窗 -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+            </div>
+            <p id="confirm-message">确定要删除吗？此操作不可撤销。</p>
+            <div class="form-actions">
+                <button type="button" onclick="closeModal('confirm-modal')">取消</button>
+                <button type="button" id="confirm-delete-btn" class="danger">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
